@@ -16,6 +16,10 @@
 
 #include <Trade/Trade.mqh>
 
+// --- 許可口座リスト ---
+#define ALLOWED_ACCOUNT_COUNT 1
+const long g_allowedAccounts[ALLOWED_ACCOUNT_COUNT] = {370394526};
+
 //+------------------------------------------------------------------+
 //| 定数                                                              |
 //+------------------------------------------------------------------+
@@ -36,7 +40,7 @@ enum ENUM_TREND_DIR
 //+------------------------------------------------------------------+
 
 // --- 基本設定 ---
-input int    Magic_Number          = 12345;    // マジックナンバー
+input int    Magic_Number          = 718463;    // マジックナンバー
 input double Lots                  = 0.1;      // ロット数
 input bool   SinglePairMode        = false;    // シングルペアモード(テスト用)
 
@@ -92,6 +96,19 @@ datetime     g_lastTPCheckTime;
 //+------------------------------------------------------------------+
 int OnInit()
 {
+   // --- 口座番号チェック ---
+   long accountNumber = AccountInfoInteger(ACCOUNT_LOGIN);
+   bool accountAllowed = false;
+   for(int i = 0; i < ALLOWED_ACCOUNT_COUNT; i++)
+   {
+      if(accountNumber == g_allowedAccounts[i]) { accountAllowed = true; break; }
+   }
+   if(!accountAllowed)
+   {
+      PrintFormat("[TrendGrid ERROR] この口座(%d)では利用できません。許可された口座で実行してください。", accountNumber);
+      return(INIT_FAILED);
+   }
+
    // --- パラメータ検証 ---
    if(Lots <= 0 || Trap_Pips <= 0 || Profit_Pips <= 0 || GridLines <= 0)
    {

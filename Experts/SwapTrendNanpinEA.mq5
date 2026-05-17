@@ -7,6 +7,10 @@
 #property strict
 #include <Trade/Trade.mqh>
 
+// --- 許可口座リスト ---
+#define ALLOWED_ACCOUNT_COUNT 2
+const long g_allowedAccounts[ALLOWED_ACCOUNT_COUNT] = {75545335, 70643523};
+
 #define PAIR_COUNT     4
 #define PATTERN_COUNT  4
 #define MAX_PAIRS      (PATTERN_COUNT * PAIR_COUNT)  // 最大16ペア
@@ -31,7 +35,7 @@ const int g_patternSwapDir[PATTERN_COUNT][PAIR_COUNT] = {
 const string g_patternNames[PATTERN_COUNT] = {"A", "B", "C", "D"};
 
 // --- 基本設定 ---
-input int    Magic_Number       = 12345;
+input int    Magic_Number       = 847291;
 input double Lots               = 0.1;
 input bool   SinglePairMode     = false;
 
@@ -110,6 +114,19 @@ bool HasPositionsForMagic(int magic, string symbol)
 //--- OnInit ---
 int OnInit()
 {
+   // --- 口座番号チェック ---
+   long accountNumber = AccountInfoInteger(ACCOUNT_LOGIN);
+   bool accountAllowed = false;
+   for(int i = 0; i < ALLOWED_ACCOUNT_COUNT; i++)
+   {
+      if(accountNumber == g_allowedAccounts[i]) { accountAllowed = true; break; }
+   }
+   if(!accountAllowed)
+   {
+      PrintFormat("[SwapNanpin ERROR] この口座(%d)では利用できません。許可された口座で実行してください。", accountNumber);
+      return(INIT_FAILED);
+   }
+
    // パラメータ検証
    if(Lots <= 0)
    { Print("[SwapNanpin ERROR] Lots は正の値が必要"); return(INIT_PARAMETERS_INCORRECT); }
