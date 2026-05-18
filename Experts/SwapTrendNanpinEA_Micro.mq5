@@ -565,8 +565,8 @@ void CheckNanpinWithLot(int idx, double baseLot)
    }
    if(!nanpinTrigger) return;
 
-   // 前のロットベースでナンピンロット計算
-   double lots = baseLot * MathPow(Lot_Multiplier, g_pairs[idx].nanpinCount);
+   // 前のロットベースでナンピンロット計算（+1で初回ナンピンから倍率適用）
+   double lots = baseLot * MathPow(Lot_Multiplier, g_pairs[idx].nanpinCount + 1);
    g_trade.SetExpertMagicNumber(g_pairs[idx].magicNumber);
 
    bool result = false;
@@ -593,7 +593,8 @@ void CheckNanpinWithLot(int idx, double baseLot)
 //--- CalcNanpinLots ---
 double CalcNanpinLots(int count)
 {
-   return Lots * MathPow(Lot_Multiplier, count);
+   // count=0(ナンピン1回目)から倍率を適用する（+1で初回から倍）
+   return Lots * MathPow(Lot_Multiplier, count + 1);
 }
 
 //--- CalcAveragePrice ---
