@@ -1,8 +1,8 @@
 //+------------------------------------------------------------------+
-//| SwapTrendNanpinEA.mq5 - スワップ＋トレンド＋ナンピン EA            |
+//| TrendNanpinEA.mq5 - トレンド＋ナンピン EA            |
 //| パターンA〜D 複数同時稼働対応版（通常口座版）                       |
 //+------------------------------------------------------------------+
-#property copyright "Swap Trend Nanpin EA"
+#property copyright "Trend Nanpin EA"
 #property version   "3.00"
 #property strict
 #include <Trade/Trade.mqh>
@@ -123,21 +123,21 @@ int OnInit()
    }
    if(!accountAllowed)
    {
-      PrintFormat("[SwapNanpin ERROR] この口座(%d)では利用できません。許可された口座で実行してください。", accountNumber);
+      PrintFormat("[TrendNanpin ERROR] この口座(%d)では利用できません。許可された口座で実行してください。", accountNumber);
       return(INIT_FAILED);
    }
 
    // パラメータ検証
    if(Lots <= 0)
-   { Print("[SwapNanpin ERROR] Lots は正の値が必要"); return(INIT_PARAMETERS_INCORRECT); }
+   { Print("[TrendNanpin ERROR] Lots は正の値が必要"); return(INIT_PARAMETERS_INCORRECT); }
    if(Nanpin_Pips <= 0)
-   { Print("[SwapNanpin ERROR] Nanpin_Pips は正の値が必要"); return(INIT_PARAMETERS_INCORRECT); }
+   { Print("[TrendNanpin ERROR] Nanpin_Pips は正の値が必要"); return(INIT_PARAMETERS_INCORRECT); }
    if(Profit_Pips <= 0)
-   { Print("[SwapNanpin ERROR] Profit_Pips は正の値が必要"); return(INIT_PARAMETERS_INCORRECT); }
+   { Print("[TrendNanpin ERROR] Profit_Pips は正の値が必要"); return(INIT_PARAMETERS_INCORRECT); }
    if(Max_Nanpin < 0)
-   { Print("[SwapNanpin ERROR] Max_Nanpin は0以上が必要 (0=無制限)"); return(INIT_PARAMETERS_INCORRECT); }
+   { Print("[TrendNanpin ERROR] Max_Nanpin は0以上が必要 (0=無制限)"); return(INIT_PARAMETERS_INCORRECT); }
    if(MA_Period <= 0)
-   { Print("[SwapNanpin ERROR] MA_Period は正の値が必要"); return(INIT_PARAMETERS_INCORRECT); }
+   { Print("[TrendNanpin ERROR] MA_Period は正の値が必要"); return(INIT_PARAMETERS_INCORRECT); }
 
    // ペア設定初期化（有効パターンのペアを順に登録）
    g_activePairCount = 0;
@@ -190,7 +190,7 @@ int OnInit()
                g_pairs[idx].lastEntryPrice = 0;
                g_pairs[idx].lastBarTime    = 0;
                g_activePairCount++;
-               PrintFormat("[SwapNanpin INFO][Pat%s][%s] パターンOFF - 既存ポジション決済待ちモード",
+               PrintFormat("[TrendNanpin INFO][Pat%s][%s] パターンOFF - 既存ポジション決済待ちモード",
                           g_patternNames[pat], sym);
             }
          }
@@ -199,7 +199,7 @@ int OnInit()
 
    // 有効ペアが1つもなければエラー
    if(g_activePairCount == 0)
-   { Print("[SwapNanpin ERROR] 有効なペアがありません（パターンONまたは既存ポジションが必要）"); return(INIT_PARAMETERS_INCORRECT); }
+   { Print("[TrendNanpin ERROR] 有効なペアがありません（パターンONまたは既存ポジションが必要）"); return(INIT_PARAMETERS_INCORRECT); }
 
    // シングルペアモード
    if(SinglePairMode)
@@ -212,7 +212,7 @@ int OnInit()
       }
       if(foundIdx == -1)
       {
-         PrintFormat("[SwapNanpin ERROR] シングルペアモード: %s は有効パターンの管理対象外", chartSymbol);
+         PrintFormat("[TrendNanpin ERROR] シングルペアモード: %s は有効パターンの管理対象外", chartSymbol);
          return(INIT_FAILED);
       }
       // 見つかったペアを先頭にコピーして1ペアだけ稼働
@@ -233,7 +233,7 @@ int OnInit()
       g_pairs[0].lastEntryPrice = 0;
       g_pairs[0].lastBarTime    = 0;
       g_activePairCount = 1;
-      PrintFormat("[SwapNanpin INFO] シングルペアモード: %s のみ稼働 (パターン%s)",
+      PrintFormat("[TrendNanpin INFO] シングルペアモード: %s のみ稼働 (パターン%s)",
                  chartSymbol, g_patternNames[g_pairs[0].patternIndex]);
    }
    else
@@ -244,12 +244,12 @@ int OnInit()
          if(!g_pairs[i].enabled) continue;
          if(!SymbolInfoInteger(g_pairs[i].symbol, SYMBOL_EXIST))
          {
-            PrintFormat("[SwapNanpin ERROR] シンボル利用不可: %s (パターン%s)",
+            PrintFormat("[TrendNanpin ERROR] シンボル利用不可: %s (パターン%s)",
                        g_pairs[i].symbol, g_patternNames[g_pairs[i].patternIndex]);
             return(INIT_FAILED);
          }
       }
-      PrintFormat("[SwapNanpin INFO] マルチペアモード稼働: %dペア", g_activePairCount);
+      PrintFormat("[TrendNanpin INFO] マルチペアモード稼働: %dペア", g_activePairCount);
    }
 
    // MAインジケータハンドル作成 + スワップ方向解決
@@ -259,7 +259,7 @@ int OnInit()
       g_pairs[i].maHandle = iMA(g_pairs[i].symbol, MA_Timeframe, MA_Period, 0, MODE_SMA, PRICE_CLOSE);
       if(g_pairs[i].maHandle == INVALID_HANDLE)
       {
-         PrintFormat("[SwapNanpin ERROR] MA作成失敗: %s, err=%d", g_pairs[i].symbol, GetLastError());
+         PrintFormat("[TrendNanpin ERROR] MA作成失敗: %s, err=%d", g_pairs[i].symbol, GetLastError());
          return(INIT_FAILED);
       }
       GetSwapDirection(i);
@@ -275,7 +275,7 @@ int OnInit()
    for(int i = 0; i < g_activePairCount; i++)
    {
       if(!g_pairs[i].enabled) continue;
-      PrintFormat("[SwapNanpin INFO][Pat%s][%s] Magic=%d, SwapDir=%s",
+      PrintFormat("[TrendNanpin INFO][Pat%s][%s] Magic=%d, SwapDir=%s",
                  g_patternNames[g_pairs[i].patternIndex],
                  g_pairs[i].symbol, g_pairs[i].magicNumber,
                  (g_pairs[i].swapDirection == 1) ? "BUY" : "SELL");
@@ -291,7 +291,7 @@ int OnInit()
          enabledPatterns += g_patternNames[pat];
       }
    }
-   PrintFormat("[SwapNanpin INFO] 初期化完了: パターン=[%s], MA=%d(%s), Nanpin=%dpips, Max=%d, Profit=%dpips",
+   PrintFormat("[TrendNanpin INFO] 初期化完了: パターン=[%s], MA=%d(%s), Nanpin=%dpips, Max=%d, Profit=%dpips",
               enabledPatterns, MA_Period, EnumToString(MA_Timeframe), Nanpin_Pips, Max_Nanpin, Profit_Pips);
    return(INIT_SUCCEEDED);
 }
@@ -307,7 +307,7 @@ void OnDeinit(const int reason)
          g_pairs[i].maHandle = INVALID_HANDLE;
       }
    }
-   PrintFormat("[SwapNanpin INFO] EA停止: reason=%d", reason);
+   PrintFormat("[TrendNanpin INFO] EA停止: reason=%d", reason);
 }
 
 //--- OnTick ---
@@ -332,7 +332,7 @@ void ProcessPair(int idx)
       if(CountPositions(idx) == 0)
       {
          g_pairs[idx].enabled = false;
-         PrintFormat("[SwapNanpin INFO][Pat%s][%s] 全ポジション決済完了 - 停止",
+         PrintFormat("[TrendNanpin INFO][Pat%s][%s] 全ポジション決済完了 - 停止",
                     g_patternNames[g_pairs[idx].patternIndex], g_pairs[idx].symbol);
       }
       else
@@ -417,7 +417,7 @@ void GetSwapDirection(int idx)
    else
       g_pairs[idx].swapDirection = -1;
 
-   PrintFormat("[SwapNanpin INFO][%s] スワップ自動検出: Long=%.2f, Short=%.2f → %s",
+   PrintFormat("[TrendNanpin INFO][%s] スワップ自動検出: Long=%.2f, Short=%.2f → %s",
               symbol, swapLong, swapShort,
               (g_pairs[idx].swapDirection == 1) ? "BUY" : "SELL");
 }
@@ -429,7 +429,7 @@ bool IsTrendAligned(int idx)
    ArraySetAsSeries(maBuffer, true);
    if(CopyBuffer(g_pairs[idx].maHandle, 0, 0, 1, maBuffer) <= 0)
    {
-      PrintFormat("[SwapNanpin ERROR][%s] MA取得失敗: err=%d", g_pairs[idx].symbol, GetLastError());
+      PrintFormat("[TrendNanpin ERROR][%s] MA取得失敗: err=%d", g_pairs[idx].symbol, GetLastError());
       return false;
    }
 
@@ -468,22 +468,22 @@ void CheckEntry(int idx)
 
    bool result = false;
    if(g_pairs[idx].swapDirection == 1)
-      result = g_trade.Buy(Lots, symbol, 0, 0, 0, "SwapNanpin");
+      result = g_trade.Buy(Lots, symbol, 0, 0, 0, "TrendNanpin");
    else
-      result = g_trade.Sell(Lots, symbol, 0, 0, 0, "SwapNanpin");
+      result = g_trade.Sell(Lots, symbol, 0, 0, 0, "TrendNanpin");
 
    if(result)
    {
       double entryPrice = g_trade.ResultPrice();
       g_pairs[idx].nanpinCount    = 0;
       g_pairs[idx].lastEntryPrice = entryPrice;
-      PrintFormat("[SwapNanpin INFO][Pat%s][%s] 初回エントリー: %s %.2f lots @ %s",
+      PrintFormat("[TrendNanpin INFO][Pat%s][%s] 初回エントリー: %s %.2f lots @ %s",
                  g_patternNames[g_pairs[idx].patternIndex],
                  symbol, (g_pairs[idx].swapDirection == 1) ? "BUY" : "SELL",
                  Lots, DoubleToString(entryPrice, g_pairs[idx].digits));
    }
    else
-      PrintFormat("[SwapNanpin ERROR][%s] 注文失敗: err=%d", symbol, GetLastError());
+      PrintFormat("[TrendNanpin ERROR][%s] 注文失敗: err=%d", symbol, GetLastError());
 }
 
 //--- CheckNanpin ---
@@ -518,23 +518,23 @@ void CheckNanpin(int idx)
 
    bool result = false;
    if(g_pairs[idx].swapDirection == 1)
-      result = g_trade.Buy(lots, symbol, 0, 0, 0, "SwapNanpin");
+      result = g_trade.Buy(lots, symbol, 0, 0, 0, "TrendNanpin");
    else
-      result = g_trade.Sell(lots, symbol, 0, 0, 0, "SwapNanpin");
+      result = g_trade.Sell(lots, symbol, 0, 0, 0, "TrendNanpin");
 
    if(result)
    {
       double entryPrice = g_trade.ResultPrice();
       g_pairs[idx].nanpinCount++;
       g_pairs[idx].lastEntryPrice = entryPrice;
-      PrintFormat("[SwapNanpin INFO][Pat%s][%s] ナンピン #%d: %s %.2f lots @ %s",
+      PrintFormat("[TrendNanpin INFO][Pat%s][%s] ナンピン #%d: %s %.2f lots @ %s",
                  g_patternNames[g_pairs[idx].patternIndex],
                  symbol, g_pairs[idx].nanpinCount,
                  (g_pairs[idx].swapDirection == 1) ? "BUY" : "SELL",
                  lots, DoubleToString(entryPrice, g_pairs[idx].digits));
    }
    else
-      PrintFormat("[SwapNanpin ERROR][%s] ナンピン注文失敗: err=%d", symbol, GetLastError());
+      PrintFormat("[TrendNanpin ERROR][%s] ナンピン注文失敗: err=%d", symbol, GetLastError());
 }
 
 //--- CheckNanpinWithLot ---
@@ -569,23 +569,23 @@ void CheckNanpinWithLot(int idx, double baseLot)
 
    bool result = false;
    if(g_pairs[idx].swapDirection == 1)
-      result = g_trade.Buy(lots, symbol, 0, 0, 0, "SwapNanpin");
+      result = g_trade.Buy(lots, symbol, 0, 0, 0, "TrendNanpin");
    else
-      result = g_trade.Sell(lots, symbol, 0, 0, 0, "SwapNanpin");
+      result = g_trade.Sell(lots, symbol, 0, 0, 0, "TrendNanpin");
 
    if(result)
    {
       double entryPrice = g_trade.ResultPrice();
       g_pairs[idx].nanpinCount++;
       g_pairs[idx].lastEntryPrice = entryPrice;
-      PrintFormat("[SwapNanpin INFO][Pat%s][%s] ナンピン(旧ロット) #%d: %s %.2f lots @ %s",
+      PrintFormat("[TrendNanpin INFO][Pat%s][%s] ナンピン(旧ロット) #%d: %s %.2f lots @ %s",
                  g_patternNames[g_pairs[idx].patternIndex],
                  symbol, g_pairs[idx].nanpinCount,
                  (g_pairs[idx].swapDirection == 1) ? "BUY" : "SELL",
                  lots, DoubleToString(entryPrice, g_pairs[idx].digits));
    }
    else
-      PrintFormat("[SwapNanpin ERROR][%s] ナンピン注文失敗: err=%d", symbol, GetLastError());
+      PrintFormat("[TrendNanpin ERROR][%s] ナンピン注文失敗: err=%d", symbol, GetLastError());
 }
 
 //--- CalcNanpinLots ---
@@ -668,14 +668,14 @@ void CloseAllPositions(int idx)
       if(g_trade.PositionClose(ticket))
          closed++;
       else
-         PrintFormat("[SwapNanpin ERROR][%s] 決済失敗: ticket=%d, err=%d", symbol, ticket, GetLastError());
+         PrintFormat("[TrendNanpin ERROR][%s] 決済失敗: ticket=%d, err=%d", symbol, ticket, GetLastError());
    }
 
    if(closed > 0)
    {
       g_pairs[idx].nanpinCount    = 0;
       g_pairs[idx].lastEntryPrice = 0;
-      PrintFormat("[SwapNanpin INFO][Pat%s][%s] 一括決済: %dポジション, 利益 %.0f",
+      PrintFormat("[TrendNanpin INFO][Pat%s][%s] 一括決済: %dポジション, 利益 %.0f",
                  g_patternNames[g_pairs[idx].patternIndex],
                  symbol, closed, totalProfit);
    }
@@ -715,7 +715,7 @@ void RestoreStateFromPositions()
       {
          g_pairs[idx].nanpinCount    = posCount - 1;  // 初回エントリー分を除く
          g_pairs[idx].lastEntryPrice = latestPrice;
-         PrintFormat("[SwapNanpin INFO][Pat%s][%s] 状態復元: ポジション数=%d, ナンピン回数=%d, 直近価格=%s",
+         PrintFormat("[TrendNanpin INFO][Pat%s][%s] 状態復元: ポジション数=%d, ナンピン回数=%d, 直近価格=%s",
                     g_patternNames[g_pairs[idx].patternIndex],
                     symbol, posCount, g_pairs[idx].nanpinCount,
                     DoubleToString(latestPrice, g_pairs[idx].digits));
