@@ -9,7 +9,7 @@
 
 // --- 許可口座リスト ---
 #define ALLOWED_ACCOUNT_COUNT 2
-const long g_allowedAccounts[ALLOWED_ACCOUNT_COUNT] = {75545335, 70643523};
+const long g_allowedAccounts[ALLOWED_ACCOUNT_COUNT] = {75545335, 70643523, 75548484};
 
 #define PAIR_COUNT     4
 #define PATTERN_COUNT  4
