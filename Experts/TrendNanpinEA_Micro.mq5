@@ -41,9 +41,9 @@ input bool   SinglePairMode     = false;
 
 // --- パターン有効/無効（複数同時ON可能） ---
 input bool   EnablePattern_A    = true;     // パターンA (USDJPY,GBPJPY,AUDJPY,EURAUD)
-input bool   EnablePattern_B    = false;    // パターンB (NZDJPY,CADJPY,CHFJPY,GBPAUD)
-input bool   EnablePattern_C    = false;    // パターンC (EURUSD,GBPUSD,AUDUSD,USDCHF)
-input bool   EnablePattern_D    = false;    // パターンD (EURJPY,USDJPY,GBPCHF,AUDNZD)
+input bool   EnablePattern_B    = true;    // パターンB (NZDJPY,CADJPY,CHFJPY,GBPAUD)
+input bool   EnablePattern_C    = true;    // パターンC (EURUSD,GBPUSD,AUDUSD,USDCHF)
+input bool   EnablePattern_D    = true;    // パターンD (EURJPY,USDJPY,GBPCHF,AUDNZD)
 
 // --- MA設定 ---
 input int    MA_Period           = 100;
@@ -52,7 +52,7 @@ input ENUM_TIMEFRAMES MA_Timeframe = PERIOD_H4;
 // --- ナンピン設定 ---
 input int    Nanpin_Pips         = 50;
 input int    Max_Nanpin          = 0;      // 0=無制限
-input double Lot_Multiplier      = 2.0;
+input double Lot_Multiplier      = 1.0;
 
 // --- 決済設定 ---
 input int    Profit_Pips         = 30;
